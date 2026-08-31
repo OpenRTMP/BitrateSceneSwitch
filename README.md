@@ -92,7 +92,7 @@ To pair, connect Twitch and/or Kick in the IRLchat dashboard, generate a pairing
 | `!ss <name>` | Switch to any scene by name. Fuzzy match, so `!ss priv` will hit `PRIVACY` |
 | `!s <name>` | Same as `!ss`, shorter alias |
 | `!refresh` | Re-trigger the current scene (clears stuck sources) |
-| `!fix` | Refresh media sources (RTMP, SRT, RIST, etc.) |
+| `!fix` | Refresh media sources (RTMP, SRT, RIST, etc.), including Smooth Media Source via its vendor API |
 | `!status` | Reply with current bitrate, RTT, and scene |
 | `!bss on` / `!bss off` | Enable or disable the plugin while keeping chat connected |
 | `!trigger` | Force a switch check immediately |

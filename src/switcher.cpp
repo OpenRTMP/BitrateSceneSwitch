@@ -1,4 +1,5 @@
 #include "switcher.hpp"
+#include "obs-websocket-api.h"
 #include <obs-module.h>
 #include <obs-frontend-api.h>
 #include <util/platform.h>
@@ -645,43 +646,97 @@ void Switcher::refreshScene()
 
 void Switcher::fixMediaSources()
 {
-    obs_enum_sources([](void*, obs_source_t *source) -> bool {
-        const char *sourceId = obs_source_get_id(source);
-        if (!sourceId) return true;
-
-        if (strcmp(sourceId, "ffmpeg_source") != 0 &&
-            strcmp(sourceId, "vlc_source") != 0)
+    std::vector<obs_source_t *> mediaSources;
+    obs_enum_sources([](void *data, obs_source_t *source) -> bool {
+        const char *sourceId = obs_source_get_unversioned_id(source);
+        if (!sourceId)
             return true;
 
-        obs_data_t *settings = obs_source_get_settings(source);
-        if (!settings) return true;
+        bool shouldRestart = strcmp(sourceId, "smooth_media_source") == 0;
+        if (!shouldRestart &&
+            (strcmp(sourceId, "ffmpeg_source") == 0 ||
+             strcmp(sourceId, "vlc_source") == 0)) {
+            obs_data_t *settings = obs_source_get_settings(source);
+            if (!settings)
+                return true;
 
-        const char *input = obs_data_get_string(settings, "input");
-        if (!input || input[0] == '\0') {
+            const char *input = obs_data_get_string(settings, "input");
+            std::string inputStr = input ? input : "";
             obs_data_release(settings);
-            return true;
+            std::transform(inputStr.begin(), inputStr.end(), inputStr.begin(),
+                           [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+
+            shouldRestart =
+                inputStr.rfind("rtmp", 0) == 0 ||
+                inputStr.rfind("srt", 0) == 0 ||
+                inputStr.rfind("udp", 0) == 0 ||
+                inputStr.rfind("rist", 0) == 0 ||
+                inputStr.rfind("rtsp", 0) == 0;
         }
 
-        std::string inputStr = input;
-        obs_data_release(settings);
-        std::transform(inputStr.begin(), inputStr.end(), inputStr.begin(), ::tolower);
-
-        bool isStreamSource =
-            inputStr.rfind("rtmp", 0) == 0 ||
-            inputStr.rfind("srt", 0) == 0 ||
-            inputStr.rfind("udp", 0) == 0 ||
-            inputStr.rfind("rist", 0) == 0 ||
-            inputStr.rfind("rtsp", 0) == 0;
-
-        if (isStreamSource) {
-            obs_source_media_restart(source);
-            blog(LOG_INFO, "[BitrateSceneSwitch] Fix: refreshed media source: %s",
-                 obs_source_get_name(source));
+        if (shouldRestart) {
+            auto *sources = static_cast<std::vector<obs_source_t *> *>(data);
+            obs_source_t *sourceRef = obs_source_get_ref(source);
+            if (sourceRef)
+                sources->push_back(sourceRef);
         }
         return true;
-    }, nullptr);
+    }, &mediaSources);
 
-    blog(LOG_INFO, "[BitrateSceneSwitch] Fix: refreshed media sources");
+    size_t restarted = 0;
+    for (obs_source_t *source : mediaSources) {
+        const char *sourceId = obs_source_get_unversioned_id(source);
+        const char *sourceName = obs_source_get_name(source);
+        bool vendorRestarted = false;
+
+        if (sourceId && strcmp(sourceId, "smooth_media_source") == 0) {
+            obs_data_t *vendorData = obs_data_create();
+            obs_data_set_string(vendorData, "sourceName", sourceName);
+
+            obs_data_t *requestData = obs_data_create();
+            obs_data_set_string(requestData, "vendorName", "obs-smooth-media");
+            obs_data_set_string(requestData, "requestType", "RestartSource");
+            obs_data_set_obj(requestData, "requestData", vendorData);
+
+            obs_websocket_request_response *response =
+                obs_websocket_call_request("CallVendorRequest", requestData);
+            obs_data_release(requestData);
+            obs_data_release(vendorData);
+
+            if (response && response->status_code == 100 && response->response_data) {
+                obs_data_t *responseData = obs_data_create_from_json(response->response_data);
+                obs_data_t *vendorResponse = responseData
+                    ? obs_data_get_obj(responseData, "responseData")
+                    : nullptr;
+                vendorRestarted = vendorResponse &&
+                                  obs_data_get_bool(vendorResponse, "success");
+                if (vendorResponse)
+                    obs_data_release(vendorResponse);
+                if (responseData)
+                    obs_data_release(responseData);
+            }
+
+            if (!vendorRestarted) {
+                blog(LOG_WARNING,
+                     "[BitrateSceneSwitch] Fix: obs-smooth-media RestartSource failed for %s%s%s; using media restart fallback",
+                     sourceName ? sourceName : "(unnamed)",
+                     response && response->comment ? ": " : "",
+                     response && response->comment ? response->comment : "");
+            }
+            obs_websocket_request_response_free(response);
+        }
+
+        if (!vendorRestarted)
+            obs_source_media_restart(source);
+
+        ++restarted;
+        blog(LOG_INFO, "[BitrateSceneSwitch] Fix: refreshed media source: %s%s",
+             sourceName ? sourceName : "(unnamed)",
+             vendorRestarted ? " via obs-smooth-media vendor" : "");
+        obs_source_release(source);
+    }
+
+    blog(LOG_INFO, "[BitrateSceneSwitch] Fix: refreshed %zu media source(s)", restarted);
 }
 
 void Switcher::switchToLow()
