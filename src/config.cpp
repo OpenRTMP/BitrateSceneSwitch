@@ -17,6 +17,7 @@ const char* getServerTypeName(ServerType type)
     case ServerType::OpenIRL: return "OpenIRL";
     case ServerType::IrlHosting: return "IRLHosting";
     case ServerType::Xiu: return "Xiu";
+    case ServerType::OpenRtmp: return "OpenRTMP";
     default: return "Unknown";
     }
 }
@@ -33,6 +34,7 @@ ServerType getServerTypeFromName(const std::string& name)
     if (name == "OpenIRL") return ServerType::OpenIRL;
     if (name == "IRLHosting" || name == "IrlHosting") return ServerType::IrlHosting;
     if (name == "Xiu") return ServerType::Xiu;
+    if (name == "OpenRTMP" || name == "OpenRtmp" || name == "librtmp2-server") return ServerType::OpenRtmp;
     return ServerType::Belabox;
 }
 
