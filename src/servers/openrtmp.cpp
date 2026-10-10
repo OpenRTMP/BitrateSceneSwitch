@@ -57,7 +57,7 @@ BitrateInfo OpenRtmpServer::fetchStats()
 
     const double kbps = bitrate.toDouble();
     if (!std::isfinite(kbps) || kbps <= 0.0 ||
-        kbps >= static_cast<double>(std::numeric_limits<int64_t>::max()))
+        kbps >= static_cast<double>((std::numeric_limits<int64_t>::max)()))
         return info;
 
     info.bitrateKbps = static_cast<int64_t>(std::llround(kbps));
@@ -67,7 +67,8 @@ BitrateInfo OpenRtmpServer::fetchStats()
     const QJsonValue rtt = stats.value("rtt_ms");
     if (rtt.isDouble()) {
         const double rttMs = rtt.toDouble();
-        if (std::isfinite(rttMs) && rttMs >= 0.0)
+        if (std::isfinite(rttMs) && rttMs >= 0.0 &&
+            rttMs < static_cast<double>((std::numeric_limits<int>::max)()))
             info.rttMs = rttMs;
     }
 
