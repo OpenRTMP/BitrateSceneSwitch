@@ -20,7 +20,7 @@ enum class ServerType {
     OpenIRL,
     IrlHosting,
     Xiu,
-    OpenRtmp // Append only: numeric IDs are stored in OBS settings
+    OpenRtmp
 };
 
 struct Triggers {
