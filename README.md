@@ -164,12 +164,15 @@ Add as many servers as you want on the **Servers** tab. Each one has its own pri
 |--------|-------------------|
 | **BELABOX** | `https://cloud.belabox.net/stats` |
 | **NGINX RTMP** | `http://localhost:8080/stat` |
+| **[OpenRTMP](https://github.com/OpenRTMP/librtmp2-server)** | `http://localhost:8080/stats?key=sts_0123456789abcdef0123456789abcdef` |
 | **[Moo RIST](https://github.com/moo-the-cow/moo-rist-hosting-native)** | `http://localhost:8080/stats` |
 | **SRT Live Server** | `http://localhost:8181/stats` |
 | **MediaMTX** | `http://localhost:9997/v3/paths/get/` |
 | **Node Media Server** | `http://localhost:8000/api/streams` |
 | **Nimble** | `http://localhost:8082` |
 | **IRLHosting** | Your server stats URL |
+
+For **OpenRTMP (librtmp2-server)**, select **OpenRTMP** as the server type and paste the complete `/stats?key=sts_...` URL from your own server. The key is the **per-stream stats key**, not the RTMP publish key, play key or administrative API token. The Publisher field is not needed. The plugin reads `bitrate_kbps` and `rtt_ms` from the public JSON endpoint; an offline or unavailable stream is treated as offline for scene switching. Keep the stats URL private because it contains a credential.
 
 ---
 
