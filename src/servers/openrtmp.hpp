@@ -4,9 +4,9 @@
 
 namespace BitrateSwitch {
 
-class OpenRtmpServer : public StreamServer {
+class OpenRTMPServer : public StreamServer {
 public:
-    explicit OpenRtmpServer(const StreamServerConfig &config);
+    explicit OpenRTMPServer(const StreamServerConfig &config);
 
     SwitchType checkSwitch(const Triggers &triggers) override;
     BitrateInfo getBitrate() override;
