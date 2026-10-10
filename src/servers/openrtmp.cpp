@@ -27,9 +27,6 @@ BitrateInfo OpenRtmpServer::fetchStats()
     if (statsUrl_.empty())
         return info;
 
-    // GET /stats?key=<stats_key> returns flat JSON for an active publisher.
-    // Invalid keys and offline streams are deliberately indistinguishable:
-    // both yield a non-JSON offline response.
     HttpResponse response = httpClient_.get(statsUrl_);
     if (!response.success)
         return info;
@@ -42,8 +39,6 @@ BitrateInfo OpenRtmpServer::fetchStats()
 
     QJsonObject stats = document.object();
 
-    // Older examples/versions use a top-level "streams" array. The current
-    // public endpoint returns the publisher fields directly.
     if (stats.contains("streams")) {
         const QJsonValue streams = stats.value("streams");
         if (!streams.isArray() || streams.toArray().isEmpty())
