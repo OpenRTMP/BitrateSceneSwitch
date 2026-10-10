@@ -20,7 +20,7 @@ enum class ServerType {
     OpenIRL,
     IrlHosting,
     Xiu,
-    OpenRtmp
+    OpenRTMP
 };
 
 struct Triggers {
