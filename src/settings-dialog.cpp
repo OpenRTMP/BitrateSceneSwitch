@@ -668,7 +668,6 @@ QWidget *SettingsDialog::createServerPage(const StreamServerConfig *initial)
     form->addRow("Publisher:", key);
     form->addRow("Priority:", priority);
 
-    // OpenRTMP uses a per-stream stats key in the URL; there is no publisher field.
     auto updateServerFields = [type, url, key, form]() {
         const bool openRtmp = type->currentData().toInt() == static_cast<int>(ServerType::OpenRtmp);
         key->setVisible(!openRtmp);
