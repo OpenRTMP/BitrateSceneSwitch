@@ -12,14 +12,14 @@
 
 namespace BitrateSwitch {
 
-OpenRtmpServer::OpenRtmpServer(const StreamServerConfig &config)
+OpenRTMPServer::OpenRTMPServer(const StreamServerConfig &config)
 {
     statsUrl_ = config.statsUrl;
     name_ = config.name;
     overrideScenes_ = config.overrideScenes;
 }
 
-BitrateInfo OpenRtmpServer::fetchStats()
+BitrateInfo OpenRTMPServer::fetchStats()
 {
     BitrateInfo info;
     info.serverName = name_;
@@ -71,12 +71,12 @@ BitrateInfo OpenRtmpServer::fetchStats()
     return info;
 }
 
-SwitchType OpenRtmpServer::checkSwitch(const Triggers &triggers)
+SwitchType OpenRTMPServer::checkSwitch(const Triggers &triggers)
 {
     return evaluateTriggers(fetchStats(), triggers);
 }
 
-BitrateInfo OpenRtmpServer::getBitrate()
+BitrateInfo OpenRTMPServer::getBitrate()
 {
     BitrateInfo info = fetchStats();
     if (info.isOnline) {
